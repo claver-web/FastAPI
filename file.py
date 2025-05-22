@@ -1,15 +1,25 @@
 from fastapi import FastAPI
-import json
 from fastapi.responses import JSONResponse
+import json
+import os
 
 app = FastAPI()
 
+# Load the JSON once at startup (faster, safer)
+@app.on_event("startup")
+def load_json_data():
+    global data
+    try:
+        with open("output.json", "r") as file:
+            data = json.load(file)
+    except Exception as e:
+        data = {"error": f"Failed to load data: {str(e)}"}
+
 @app.get("/")
 def get_pincode_data():
-    with open("output.json", "r") as file:
-        data = json.load(file)
     return data
 
+# Catch-all route
 @app.get("/{full_path:path}")
 def catch_all(full_path: str):
     return JSONResponse(
